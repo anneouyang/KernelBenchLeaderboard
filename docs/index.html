@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KernelBench Top Solutions (Nvidia L40S GPU) </title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1em;
+            text-align: left;
+            font-family:'Courier New', Courier, monospace
+        }
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        body {
+            font-family:'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">KernelBench Top Solutions (Nvidia L40S GPU)</h1> 
+    <table>
+        <thead>
+            <tr>
+                <th>Problem</th>
+                <th>Rank 1 (Speedup over Torch)</th>
+                <th>Rank 2</th>
+                <th>Rank 3</th>
+                <th>Rank 4</th>
+                <th>Rank 5</th>
+            </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    </table>
+
+    <script>
+        // Load the JSON data and populate the table
+        fetch("./assets/data.json")
+            .then(response => response.json())
+            .then(data => {
+                const hrefLookup = {
+                    "Level 1: 1_Square_matrix_multiplication_" : "l1_p1",
+                    "Level 1: 2_Standard_matrix_multiplication_" : "l1_p2",
+                    "Level 1: 3_Batched_matrix_multiplication" : "l1_p3",
+                    "Level 1: 4_Matrix_vector_multiplication_" : "l1_p4",
+                    "Level 1: 5_Matrix_scalar_multiplication" : "l1_p5",
+                    "Level 1: 6_Matmul_with_large_K_dimension_" : "l1_p6",
+                    "Level 1: 7_Matmul_with_small_K_dimension_" : "l1_p7",
+                    "Level 1: 8_Matmul_with_irregular_shapes_" : "l1_p8",
+                    "Level 1: 9_Tall_skinny_matrix_multiplication_" : "l1_p9",
+                    "Level 1: 10_3D_tensor_matrix_multiplication" : "l1_p10",
+                    "Level 1: 11_4D_tensor_matrix_multiplication" : "l1_p11",
+                    "Level 1: 12_Matmul_with_diagonal_matrices_" : "l1_p12",
+                    "Level 1: 13_Matmul_for_symmetric_matrices" : "l1_p13",
+                    "Level 1: 14_Matmul_for_upper_triangular_matrices" : "l1_p14",
+                    "Level 1: 15_Matmul_for_lower_triangular_matrices" : "l1_p15",
+                    "Level 1: 16_Matmul_with_transposed_A" : "l1_p16",
+                    "Level 1: 17_Matmul_with_transposed_B" : "l1_p17",
+                    "Level 1: 18_Matmul_with_transposed_both" : "l1_p18",
+                    "Level 1: 19_ReLU" : "l1_p19",
+                    "Level 1: 20_LeakyReLU" : "l1_p20",
+                    "Level 1: 21_Sigmoid" : "l1_p21",
+                    "Level 1: 22_Tanh" : "l1_p22",
+                    "Level 1: 23_Softmax" : "l1_p23",
+                    "Level 1: 24_LogSoftmax" : "l1_p24",
+                    "Level 1: 25_Swish" : "l1_p25",
+                    "Level 1: 26_GELU_" : "l1_p26",
+                    "Level 1: 27_SELU_" : "l1_p27",
+                    "Level 1: 28_HardSigmoid" : "l1_p28",
+                    "Level 1: 29_Softplus" : "l1_p29",
+                    "Level 1: 30_Softsign" : "l1_p30",
+                    "Level 1: 31_ELU" : "l1_p31",
+                    "Level 1: 32_HardTanh" : "l1_p32",
+                    "Level 1: 33_BatchNorm" : "l1_p33",
+                    "Level 1: 34_InstanceNorm" : "l1_p34",
+                    "Level 1: 35_GroupNorm_" : "l1_p35",
+                    "Level 1: 36_RMSNorm_" : "l1_p36",
+                    "Level 1: 37_FrobeniusNorm_" : "l1_p37",
+                    "Level 1: 38_L1Norm_" : "l1_p38",
+                    "Level 1: 39_L2Norm_" : "l1_p39",
+                    "Level 1: 40_LayerNorm" : "l1_p40",
+                    "Level 1: 41_Max_Pooling_1D" : "l1_p41",
+                    "Level 1: 42_Max_Pooling_2D" : "l1_p42",
+                    "Level 1: 43_Max_Pooling_3D" : "l1_p43",
+                    "Level 1: 44_Average_Pooling_1D" : "l1_p44",
+                    "Level 1: 45_Average_Pooling_2D" : "l1_p45",
+                    "Level 1: 46_Average_Pooling_3D" : "l1_p46",
+                    "Level 1: 47_Sum_reduction_over_a_dimension" : "l1_p47",
+                    "Level 1: 48_Mean_reduction_over_a_dimension" : "l1_p48",
+                    "Level 1: 49_Max_reduction_over_a_dimension" : "l1_p49",
+                    "Level 1: 50_Product_reduction_over_a_dimension" : "l1_p50",
+                    "Level 1: 51_Argmax_over_a_dimension" : "l1_p51",
+                    "Level 1: 52_Argmin_over_a_dimension" : "l1_p52",
+                    "Level 1: 53_Min_reduction_over_a_dimension" : "l1_p53",
+                    "Level 1: 54_conv_standard_3D__square_input__square_kernel" : "l1_p54",
+                    "Level 1: 55_conv_standard_2D__asymmetric_input__square_kernel" : "l1_p55",
+                    "Level 1: 56_conv_standard_2D__asymmetric_input__asymmetric_kernel" : "l1_p56",
+                    "Level 1: 57_conv_transposed_2D__square_input__square_kernel" : "l1_p57",
+                    "Level 1: 58_conv_transposed_3D__asymmetric_input__asymmetric_kernel" : "l1_p58",
+                    "Level 1: 59_conv_standard_3D__asymmetric_input__square_kernel" : "l1_p59",
+                    "Level 1: 60_conv_standard_3D__square_input__asymmetric_kernel" : "l1_p60",
+                    "Level 1: 61_conv_transposed_3D__square_input__square_kernel" : "l1_p61",
+                    "Level 1: 62_conv_standard_2D__square_input__asymmetric_kernel" : "l1_p62",
+                    "Level 1: 63_conv_standard_2D__square_input__square_kernel" : "l1_p63",
+                    "Level 1: 64_conv_transposed_1D" : "l1_p64",
+                    "Level 1: 65_conv_transposed_2D__square_input__asymmetric_kernel" : "l1_p65",
+                    "Level 1: 66_conv_standard_3D__asymmetric_input__asymmetric_kernel" : "l1_p66",
+                    "Level 1: 67_conv_standard_1D" : "l1_p67",
+                    "Level 1: 68_conv_transposed_3D__square_input__asymmetric_kernel" : "l1_p68",
+                    "Level 1: 69_conv_transposed_2D__asymmetric_input__asymmetric_kernel" : "l1_p69",
+                    "Level 1: 70_conv_transposed_3D__asymmetric_input__square_kernel" : "l1_p70",
+                    "Level 1: 71_conv_transposed_2D__asymmetric_input__square_kernel" : "l1_p71",
+                    "Level 1: 72_conv_transposed_3D_asymmetric_input_asymmetric_kernel___strided_padded_grouped_" : "l1_p72",
+                    "Level 1: 73_conv_transposed_3D_asymmetric_input_square_kernel__strided_padded__grouped" : "l1_p73",
+                    "Level 1: 74_conv_transposed_1D_dilated" : "l1_p74",
+                    "Level 1: 75_conv_transposed_2D_asymmetric_input_asymmetric_kernel_strided__grouped____padded____dilated__" : "l1_p75",
+                    "Level 1: 76_conv_standard_1D_dilated_strided__" : "l1_p76",
+                    "Level 1: 77_conv_transposed_3D_square_input_square_kernel___padded____dilated____strided__" : "l1_p77",
+                    "Level 1: 78_conv_transposed_2D_asymmetric_input_asymmetric_kernel___padded__" : "l1_p78",
+                    "Level 1: 79_conv_transposed_1D_asymmetric_input_square_kernel___padded____strided____dilated__" : "l1_p79",
+                    "Level 1: 80_conv_standard_2D_square_input_asymmetric_kernel___dilated____padded__" : "l1_p80",
+                    "Level 1: 81_conv_transposed_2D_asymmetric_input_square_kernel___dilated____padded____strided__" : "l1_p81",
+                    "Level 1: 82_conv_depthwise_2D_square_input_square_kernel" : "l1_p82",
+                    "Level 1: 83_conv_depthwise_2D_square_input_asymmetric_kernel" : "l1_p83",
+                    "Level 1: 84_conv_depthwise_2D_asymmetric_input_square_kernel" : "l1_p84",
+                    "Level 1: 85_conv_depthwise_2D_asymmetric_input_asymmetric_kernel" : "l1_p85",
+                    "Level 1: 86_conv_depthwise_separable_2D" : "l1_p86",
+                    "Level 1: 87_conv_pointwise_2D" : "l1_p87",
+                    "Level 1: 88_MinGPTNewGelu" : "l1_p88",
+                    "Level 1: 89_cumsum" : "l1_p89",
+                    "Level 1: 90_cumprod" : "l1_p90",
+                    "Level 1: 91_cumsum_reverse" : "l1_p91",
+                    "Level 1: 92_cumsum_exclusive" : "l1_p92",
+                    "Level 1: 93_masked_cumsum" : "l1_p93",
+                    "Level 1: 94_MSELoss" : "l1_p94",
+                    "Level 1: 95_CrossEntropyLoss" : "l1_p95",
+                    "Level 1: 96_HuberLoss" : "l1_p96",
+                    "Level 1: 97_CosineSimilarityLoss" : "l1_p97",
+                    "Level 1: 98_KLDivLoss" : "l1_p98",
+                    "Level 1: 99_TripletMarginLoss" : "l1_p99",
+                    "Level 1: 100_HingeLoss" : "l1_p100",
+                    "Level 2: 1_Conv2D_ReLU_BiasAdd" : "l2_p1",
+                    "Level 2: 2_ConvTranspose2d_BiasAdd_Clamp_Scaling_Clamp_Divide" : "l2_p2",
+                    "Level 2: 3_ConvTranspose3d_Sum_LayerNorm_AvgPool_GELU" : "l2_p3",
+                    "Level 2: 4_Conv2d_Mish_Mish" : "l2_p4",
+                    "Level 2: 5_ConvTranspose2d_Subtract_Tanh" : "l2_p5",
+                    "Level 2: 6_Conv3d_Softmax_MaxPool_MaxPool" : "l2_p6",
+                    "Level 2: 7_Conv3d_ReLU_LeakyReLU_GELU_Sigmoid_BiasAdd" : "l2_p7",
+                    "Level 2: 8_Conv3d_Divide_Max_GlobalAvgPool_BiasAdd_Sum" : "l2_p8",
+                    "Level 2: 9_Matmul_Subtract_Multiply_ReLU" : "l2_p9",
+                    "Level 2: 10_ConvTranspose2d_MaxPool_Hardtanh_Mean_Tanh" : "l2_p10",
+                    "Level 2: 11_ConvTranspose2d_BatchNorm_Tanh_MaxPool_GroupNorm" : "l2_p11",
+                    "Level 2: 12_Gemm_Multiply_LeakyReLU" : "l2_p12",
+                    "Level 2: 13_ConvTranspose3d_Mean_Add_Softmax_Tanh_Scaling" : "l2_p13",
+                    "Level 2: 14_Gemm_Divide_Sum_Scaling" : "l2_p14",
+                    "Level 2: 15_ConvTranspose3d_BatchNorm_Subtract" : "l2_p15",
+                    "Level 2: 16_ConvTranspose2d_Mish_Add_Hardtanh_Scaling" : "l2_p16",
+                    "Level 2: 17_Conv2d_InstanceNorm_Divide" : "l2_p17",
+                    "Level 2: 18_Matmul_Sum_Max_AvgPool_LogSumExp_LogSumExp" : "l2_p18",
+                    "Level 2: 19_ConvTranspose2d_GELU_GroupNorm" : "l2_p19",
+                    "Level 2: 20_ConvTranspose3d_Sum_ResidualAdd_Multiply_ResidualAdd" : "l2_p20",
+                    "Level 2: 21_Conv2d_Add_Scale_Sigmoid_GroupNorm" : "l2_p21",
+                    "Level 2: 22_Matmul_Scale_ResidualAdd_Clamp_LogSumExp_Mish" : "l2_p22",
+                    "Level 2: 23_Conv3d_GroupNorm_Mean" : "l2_p23",
+                    "Level 2: 24_Conv3d_Min_Softmax" : "l2_p24",
+                    "Level 2: 25_Conv2d_Min_Tanh_Tanh" : "l2_p25",
+                    "Level 2: 26_ConvTranspose3d_Add_HardSwish" : "l2_p26",
+                    "Level 2: 27_Conv3d_HardSwish_ReLU_Softmax_Mean" : "l2_p27",
+                    "Level 2: 28_BMM_InstanceNorm_Sum_ResidualAdd_Multiply" : "l2_p28",
+                    "Level 2: 29_Matmul_Mish_Mish" : "l2_p29",
+                    "Level 2: 30_Gemm_GroupNorm_Hardtanh" : "l2_p30",
+                    "Level 2: 31_Conv2d_Min_Add_Multiply" : "l2_p31",
+                    "Level 2: 32_Conv2d_Scaling_Min" : "l2_p32",
+                    "Level 2: 33_Gemm_Scale_BatchNorm" : "l2_p33",
+                    "Level 2: 34_ConvTranspose3d_LayerNorm_GELU_Scaling" : "l2_p34",
+                    "Level 2: 35_Conv2d_Subtract_HardSwish_MaxPool_Mish" : "l2_p35",
+                    "Level 2: 36_ConvTranspose2d_Min_Sum_GELU_Add" : "l2_p36",
+                    "Level 2: 37_Matmul_Swish_Sum_GroupNorm" : "l2_p37",
+                    "Level 2: 38_ConvTranspose3d_AvgPool_Clamp_Softmax_Multiply" : "l2_p38",
+                    "Level 2: 39_Gemm_Scale_BatchNorm" : "l2_p39",
+                    "Level 2: 40_Matmul_Scaling_ResidualAdd" : "l2_p40",
+                    "Level 2: 41_Gemm_BatchNorm_GELU_GroupNorm_Mean_ReLU" : "l2_p41",
+                    "Level 2: 42_ConvTranspose2d_GlobalAvgPool_BiasAdd_LogSumExp_Sum_Multiply" : "l2_p42",
+                    "Level 2: 43_Conv3d_Max_LogSumExp_ReLU" : "l2_p43",
+                    "Level 2: 44_ConvTranspose2d_Multiply_GlobalAvgPool_GlobalAvgPool_Mean" : "l2_p44",
+                    "Level 2: 45_Gemm_Sigmoid_Sum_LogSumExp" : "l2_p45",
+                    "Level 2: 46_Conv2d_Subtract_Tanh_Subtract_AvgPool" : "l2_p46",
+                    "Level 2: 47_Conv3d_Mish_Tanh" : "l2_p47",
+                    "Level 2: 48_Conv3d_Scaling_Tanh_Multiply_Sigmoid" : "l2_p48",
+                    "Level 2: 49_ConvTranspose3d_Softmax_Sigmoid" : "l2_p49",
+                    "Level 2: 50_ConvTranspose3d_Scaling_AvgPool_BiasAdd_Scaling" : "l2_p50",
+                    "Level 2: 51_Gemm_Subtract_GlobalAvgPool_LogSumExp_GELU_ResidualAdd" : "l2_p51",
+                    "Level 2: 52_Conv2d_Activation_BatchNorm" : "l2_p52",
+                    "Level 2: 53_Gemm_Scaling_Hardtanh_GELU" : "l2_p53",
+                    "Level 2: 54_Conv2d_Multiply_LeakyReLU_GELU" : "l2_p54",
+                    "Level 2: 55_Matmul_MaxPool_Sum_Scale" : "l2_p55",
+                    "Level 2: 56_Matmul_Sigmoid_Sum" : "l2_p56",
+                    "Level 2: 57_Conv2d_ReLU_HardSwish" : "l2_p57",
+                    "Level 2: 58_ConvTranspose3d_LogSumExp_HardSwish_Subtract_Clamp_Max" : "l2_p58",
+                    "Level 2: 59_Matmul_Swish_Scaling" : "l2_p59",
+                    "Level 2: 60_ConvTranspose3d_Swish_GroupNorm_HardSwish" : "l2_p60",
+                    "Level 2: 61_ConvTranspose3d_ReLU_GroupNorm" : "l2_p61",
+                    "Level 2: 62_Matmul_GroupNorm_LeakyReLU_Sum" : "l2_p62",
+                    "Level 2: 63_Gemm_ReLU_Divide" : "l2_p63",
+                    "Level 2: 64_Gemm_LogSumExp_LeakyReLU_LeakyReLU_GELU_GELU" : "l2_p64",
+                    "Level 2: 65_Conv2d_AvgPool_Sigmoid_Sum" : "l2_p65",
+                    "Level 2: 66_Matmul_Dropout_Mean_Softmax" : "l2_p66",
+                    "Level 2: 67_Conv2d_GELU_GlobalAvgPool" : "l2_p67",
+                    "Level 2: 68_Matmul_Min_Subtract" : "l2_p68",
+                    "Level 2: 69_Conv2d_HardSwish_ReLU" : "l2_p69",
+                    "Level 2: 70_Gemm_Sigmoid_Scaling_ResidualAdd" : "l2_p70",
+                    "Level 2: 71_Conv2d_Divide_LeakyReLU" : "l2_p71",
+                    "Level 2: 72_ConvTranspose3d_BatchNorm_AvgPool_AvgPool" : "l2_p72",
+                    "Level 2: 73_Conv2d_BatchNorm_Scaling" : "l2_p73",
+                    "Level 2: 74_ConvTranspose3d_LeakyReLU_Multiply_LeakyReLU_Max" : "l2_p74",
+                    "Level 2: 75_Gemm_GroupNorm_Min_BiasAdd" : "l2_p75",
+                    "Level 2: 76_Gemm_Add_ReLU" : "l2_p76",
+                    "Level 2: 77_ConvTranspose3d_Scale_BatchNorm_GlobalAvgPool" : "l2_p77",
+                    "Level 2: 78_ConvTranspose3d_Max_Max_Sum" : "l2_p78",
+                    "Level 2: 79_Conv3d_Multiply_InstanceNorm_Clamp_Multiply_Max" : "l2_p79",
+                    "Level 2: 80_Gemm_Max_Subtract_GELU" : "l2_p80",
+                    "Level 2: 81_Gemm_Swish_Divide_Clamp_Tanh_Clamp" : "l2_p81",
+                    "Level 2: 82_Conv2d_Tanh_Scaling_BiasAdd_Max" : "l2_p82",
+                    "Level 2: 83_Conv3d_GroupNorm_Min_Clamp_Dropout" : "l2_p83",
+                    "Level 2: 84_Gemm_BatchNorm_Scaling_Softmax" : "l2_p84",
+                    "Level 2: 85_Conv2d_GroupNorm_Scale_MaxPool_Clamp" : "l2_p85",
+                    "Level 2: 86_Matmul_Divide_GELU" : "l2_p86",
+                    "Level 2: 87_Conv2d_Subtract_Subtract_Mish" : "l2_p87",
+                    "Level 2: 88_Gemm_GroupNorm_Swish_Multiply_Swish" : "l2_p88",
+                    "Level 2: 89_ConvTranspose3d_MaxPool_Softmax_Subtract_Swish_Max" : "l2_p89",
+                    "Level 2: 90_Conv3d_LeakyReLU_Sum_Clamp_GELU" : "l2_p90",
+                    "Level 2: 91_ConvTranspose2d_Softmax_BiasAdd_Scaling_Sigmoid" : "l2_p91",
+                    "Level 2: 92_Conv2d_GroupNorm_Tanh_HardSwish_ResidualAdd_LogSumExp" : "l2_p92",
+                    "Level 2: 93_ConvTranspose2d_Add_Min_GELU_Multiply" : "l2_p93",
+                    "Level 2: 94_Gemm_BiasAdd_Hardtanh_Mish_GroupNorm" : "l2_p94",
+                    "Level 2: 95_Matmul_Add_Swish_Tanh_GELU_Hardtanh" : "l2_p95",
+                    "Level 2: 96_ConvTranspose3d_Multiply_Max_GlobalAvgPool_Clamp" : "l2_p96",
+                    "Level 2: 97_Matmul_BatchNorm_BiasAdd_Divide_Swish" : "l2_p97",
+                    "Level 2: 98_Matmul_AvgPool_GELU_Scale_Max" : "l2_p98",
+                    "Level 2: 99_Matmul_GELU_Softmax" : "l2_p99",
+                    "Level 2: 100_ConvTranspose3d_Clamp_Min_Divide" : "l2_p100",
+                    "Level 3: 1_MLP" : "l3_p1",
+                    "Level 3: 2_ShallowWideMLP" : "l3_p2",
+                    "Level 3: 3_DeepNarrowMLP" : "l3_p3",
+                    "Level 3: 4_LeNet5" : "l3_p4",
+                    "Level 3: 5_AlexNet" : "l3_p5",
+                    "Level 3: 6_GoogleNetInceptionModule" : "l3_p6",
+                    "Level 3: 7_GoogleNetInceptionV1" : "l3_p7",
+                    "Level 3: 8_ResNetBasicBlock" : "l3_p8",
+                    "Level 3: 9_ResNet18" : "l3_p9",
+                    "Level 3: 10_ResNet101" : "l3_p10",
+                    "Level 3: 11_VGG16" : "l3_p11",
+                    "Level 3: 12_VGG19" : "l3_p12",
+                    "Level 3: 13_DenseNet121TransitionLayer" : "l3_p13",
+                    "Level 3: 14_DenseNet121DenseBlock" : "l3_p14",
+                    "Level 3: 15_DenseNet121" : "l3_p15",
+                    "Level 3: 16_DenseNet201" : "l3_p16",
+                    "Level 3: 17_SqueezeNetFireModule" : "l3_p17",
+                    "Level 3: 18_SqueezeNet" : "l3_p18",
+                    "Level 3: 19_MobileNetV1" : "l3_p19",
+                    "Level 3: 20_MobileNetV2" : "l3_p20",
+                    "Level 3: 21_EfficientNetMBConv" : "l3_p21",
+                    "Level 3: 22_EfficientNetB0" : "l3_p22",
+                    "Level 3: 23_EfficientNetB1" : "l3_p23",
+                    "Level 3: 24_EfficientNetB2" : "l3_p24",
+                    "Level 3: 25_ShuffleNetUnit" : "l3_p25",
+                    "Level 3: 26_ShuffleNet" : "l3_p26",
+                    "Level 3: 27_RegNet" : "l3_p27",
+                    "Level 3: 28_VisionTransformer" : "l3_p28",
+                    "Level 3: 29_SwinMLP" : "l3_p29",
+                    "Level 3: 30_SwinTransformerV2" : "l3_p30",
+                    "Level 3: 31_VisionAttention" : "l3_p31",
+                    "Level 3: 32_ConvolutionalVisionTransformer" : "l3_p32",
+                    "Level 3: 33_VanillaRNN" : "l3_p33",
+                    "Level 3: 34_VanillaRNNHidden" : "l3_p34",
+                    "Level 3: 35_LTSM" : "l3_p35",
+                    "Level 3: 36_LTSMHn" : "l3_p36",
+                    "Level 3: 37_LTSMCn" : "l3_p37",
+                    "Level 3: 38_LTSMBidirectional" : "l3_p38",
+                    "Level 3: 39_GRU" : "l3_p39",
+                    "Level 3: 40_GRUHidden" : "l3_p40",
+                    "Level 3: 41_GRUBirectional" : "l3_p41",
+                    "Level 3: 42_GRUBidirectionalHidden" : "l3_p42",
+                    "Level 3: 43_MinGPTCausalAttention" : "l3_p43",
+                    "Level 3: 44_MiniGPTBlock" : "l3_p44",
+                    "Level 3: 45_UNetSoftmax" : "l3_p45",
+                    "Level 3: 46_NetVladWithGhostClusters" : "l3_p46",
+                    "Level 3: 47_NetVladNoGhostClusters" : "l3_p47",
+                    "Level 3: 48_Mamba2ReturnY" : "l3_p48",
+                    "Level 3: 49_Mamba2ReturnFinalState" : "l3_p49",
+                    "Level 3: 50_ReLUSelfAttention" : "l3_p50",
+                };
+
+                const tableBody = document.getElementById("table-body");
+                for (const [problem, solutions] of Object.entries(data)) {
+                    const row = document.createElement("tr");
+
+                    // Add problem ID as the first column
+                    const problemCell = document.createElement("td");
+                    problemCell.style.overflow = "hidden";
+                    problemCell.style.textOverflow = "ellipsis";
+                    problemCell.style.whiteSpace = "nowrap";
+                    problemCell.style.maxWidth = "500px";
+
+                    const link = document.createElement("a");
+                    link.href = "https://raw.githubusercontent.com/anneouyang/KernelBenchLeaderboard/refs/heads/main/docs/" + "/assets/problems/" + hrefLookup[problem] + ".py";
+                    link.textContent = problem;
+                    link.target = "_blank";
+                    problemCell.appendChild(link);
+                    row.appendChild(problemCell);
+
+                    // Add the top 5 solutions
+                    const cells = [];
+                    for (let i = 0; i < 5; i++) {
+                        const cell = document.createElement("td");
+                        cells.push(cell);
+                        if (solutions[i]) {
+                            const link = document.createElement("a");
+                            link.href = "https://raw.githubusercontent.com/anneouyang/KernelBenchLeaderboard/refs/heads/main/docs/" + "/assets/solutions/" + solutions[i].file + ".py";
+                            link.innerHTML = `<b>${solutions[i].torch_speedup.toFixed(2)}</b> <span style="font-size: 0.65em">(${solutions[i].display_name})</span>`;
+                            link.target = "_blank";
+                            cell.appendChild(link);
+                        } else {
+                            cell.textContent = "";
+                        }
+                    }
+                    const totalWidth = 100;
+                    const widthPerCell = totalWidth / cells.length;
+                    for (const cell of cells) {
+                        cell.style.width = `${widthPerCell}%`;
+                    }
+                    row.append(...cells);
+
+                    tableBody.appendChild(row);
+                }
+            })
+            .catch(error => console.error("Error loading data:", error));
+    </script>
+</body>
+</html>
